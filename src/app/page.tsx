@@ -2,8 +2,9 @@
 
 import PlatformCard from '@/components/PlatformCard';
 import DANASimulator from '@/components/DANASimulator';
+import HistoricalAnalysis from '@/components/HistoricalAnalysis';
 import { useWeatherData } from '@/lib/useWeatherData';
-import { RefreshCw, Cloud, Thermometer, Droplets, Activity } from 'lucide-react';
+import { RefreshCw, Cloud, Thermometer, Droplets, Activity, Database } from 'lucide-react';
 
 export default function Home() {
   const { 
@@ -33,6 +34,13 @@ export default function Home() {
     return platforms.filter(p => p.riskScore >= 50 && p.riskScore < 70).length;
   };
 
+  const getTotalPassengersAtRisk = () => {
+    // Estimación basada en ocupación promedio por andén
+    const highRiskPassengers = getHighRiskPlatforms() * 150; // 150 pasajeros promedio por andén de alto riesgo
+    const mediumRiskPassengers = getMediumRiskPlatforms() * 100;
+    return highRiskPassengers + mediumRiskPassengers;
+  };
+
   return (
     <main className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
@@ -43,8 +51,19 @@ export default function Home() {
                 Chamartín Smart Resilience
               </h1>
               <p className="text-xl text-gray-600">
-                Sistema de monitorización y predicción climática en tiempo real
+                Sistema de monitorización y predicción climática con IA
               </p>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-1 text-sm text-gray-500">
+                  <Database className="w-4 h-4" />
+                  <span>NASA POWER • AEMET • Copernicus ERA5</span>
+                </div>
+                {getTotalPassengersAtRisk() > 0 && (
+                  <div className="text-sm text-orange-600 font-medium">
+                    ~{getTotalPassengersAtRisk().toLocaleString()} pasajeros en riesgo
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-4">
               {isSimulating && (
@@ -105,22 +124,35 @@ export default function Home() {
           {/* Resumen de riesgos */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h3 className="text-red-800 font-semibold">Riesgo Alto</h3>
+              <h3 className="text-red-800 font-semibold">Riesgo Crítico</h3>
               <p className="text-2xl font-bold text-red-600">{getHighRiskPlatforms()}</p>
               <p className="text-sm text-red-600">andenes afectados</p>
+              {getHighRiskPlatforms() > 0 && (
+                <p className="text-xs text-red-500 mt-1">~{(getHighRiskPlatforms() * 150).toLocaleString()} pasajeros</p>
+              )}
             </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <h3 className="text-yellow-800 font-semibold">Riesgo Medio</h3>
               <p className="text-2xl font-bold text-yellow-600">{getMediumRiskPlatforms()}</p>
               <p className="text-sm text-yellow-600">andenes en alerta</p>
+              {getMediumRiskPlatforms() > 0 && (
+                <p className="text-xs text-yellow-600 mt-1">~{(getMediumRiskPlatforms() * 100).toLocaleString()} pasajeros</p>
+              )}
             </div>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <h3 className="text-green-800 font-semibold">Operativo Normal</h3>
               <p className="text-2xl font-bold text-green-600">{8 - getHighRiskPlatforms() - getMediumRiskPlatforms()}</p>
               <p className="text-sm text-green-600">andenes seguros</p>
+              <p className="text-xs text-green-600 mt-1">Funcionamiento estándar</p>
             </div>
           </div>
         </header>
+
+        {/* Análisis Histórico con Copernicus */}
+        <HistoricalAnalysis 
+          weatherData={weatherData} 
+          currentRiskScore={Math.max(...platforms.map(p => p.riskScore))} 
+        />
 
         {/* Simulador DANA */}
         <DANASimulator 
@@ -128,11 +160,33 @@ export default function Home() {
           onReset={resetSimulation}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {platforms.map((platform) => (
-            <PlatformCard key={platform.id} platform={platform} />
-          ))}
+        {/* Grid de Andenes */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Estado de Andenes en Tiempo Real</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {platforms.map((platform) => (
+              <PlatformCard key={platform.id} platform={platform} />
+            ))}
+          </div>
         </div>
+
+        {/* Footer con información del sistema */}
+        <footer className="bg-white rounded-lg shadow-md p-6 mt-8">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Sistema de Resiliencia Climática Inteligente
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Integrando datos satelitales, observaciones terrestres y análisis histórico para decisiones preventivas
+            </p>
+            <div className="flex justify-center items-center gap-6 text-xs text-gray-500">
+              <div>🛰️ NASA POWER API</div>
+              <div>🌡️ AEMET OpenData</div>
+              <div>📊 Copernicus ERA5</div>
+              <div>🤖 IA Predictiva</div>
+            </div>
+          </div>
+        </footer>
       </div>
     </main>
   );
