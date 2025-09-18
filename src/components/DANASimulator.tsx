@@ -2,17 +2,29 @@
 
 import { useState } from 'react';
 import { Cloud, CloudRain, Wind, AlertTriangle, Play, RotateCcw } from 'lucide-react';
+import { WeatherData } from '@/types';
 
 interface DANASimulatorProps {
-  onSimulate: (weatherData: any) => void;
+  onSimulate: (weatherData: WeatherData) => void;
   onReset: () => void;
+}
+
+interface DANAScenario {
+  name: string;
+  description: string;
+  display: {
+    precipitation: number;
+    windSpeed: number;
+    temperature: number;
+  };
+  data: WeatherData;
 }
 
 export default function DANASimulator({ onSimulate, onReset }: DANASimulatorProps) {
   const [isSimulating, setIsSimulating] = useState(false);
   const [simulationPhase, setSimulationPhase] = useState(0);
 
-  const danaScenarios = [
+  const danaScenarios: DANAScenario[] = [
     {
       name: "DANA Severa",
       description: "Precipitación intensa (15-25 mm/h) + vientos fuertes",
@@ -69,7 +81,7 @@ export default function DANASimulator({ onSimulate, onReset }: DANASimulatorProp
     }
   ];
 
-  const simulateDANA = async (scenario: any) => {
+  const simulateDANA = async (scenario: DANAScenario) => {
     setIsSimulating(true);
     setSimulationPhase(0);
 

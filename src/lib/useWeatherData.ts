@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { WeatherData, Platform } from '@/types';
 import { fetchWeatherData } from './weatherAPI';
 import { platforms as initialPlatforms } from '@/data/mockData';
@@ -54,7 +54,7 @@ export function useWeatherData() {
     setPlatforms(updatedPlatforms);
   };
 
-  const updateWeatherData = async () => {
+  const updateWeatherData = useCallback(async () => {
     if (isSimulating) return; // No actualizar durante simulación
     
     setLoading(true);
@@ -77,7 +77,7 @@ export function useWeatherData() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSimulating, originalWeatherData]);
 
   const simulateWeather = (simulatedData: WeatherData) => {
     setIsSimulating(true);
@@ -104,7 +104,7 @@ export function useWeatherData() {
     updateWeatherData();
     const interval = setInterval(updateWeatherData, 900000); // 15 minutos
     return () => clearInterval(interval);
-  }, []);
+  }, [updateWeatherData]);
 
   return {
     weatherData,

@@ -1,7 +1,7 @@
 // Copernicus Climate Data Store API
 // Análisis histórico para contexto y recomendaciones, NO para decisiones directas
 
-interface HistoricalEvent {
+export interface HistoricalEvent {
   name: string;
   date: string;
   location: string;
@@ -12,6 +12,26 @@ interface HistoricalEvent {
   minPressure: number;
   description: string;
   impact: string;
+}
+
+interface WeatherConditions {
+  precipitation: number;
+  windSpeed: number;
+  temperature: number;
+  pressure: number;
+}
+
+interface CopernicusData {
+  source: string;
+  location: { lat: number; lon: number };
+  date: string;
+  data: {
+    temperature_2m: number;
+    precipitation: number;
+    wind_speed_10m: number;
+    surface_pressure: number;
+  };
+  validation: string;
 }
 
 export const historicalEvents: HistoricalEvent[] = [
@@ -78,12 +98,7 @@ export const historicalEvents: HistoricalEvent[] = [
 ];
 
 // Función para obtener evento histórico similar (solo para contexto)
-export function findSimilarHistoricalEvent(currentWeather: {
-  precipitation: number;
-  windSpeed: number;
-  temperature: number;
-  pressure: number;
-}): HistoricalEvent | null {
+export function findSimilarHistoricalEvent(currentWeather: WeatherConditions): HistoricalEvent | null {
   
   // Buscar eventos con condiciones realmente similares (tolerancias más amplias)
   const similarEvents = historicalEvents.filter(event => {
@@ -105,12 +120,7 @@ export function findSimilarHistoricalEvent(currentWeather: {
 }
 
 // Función para generar recomendaciones basadas en patrones históricos (NO decisiones)
-export function generateHistoricalRecommendations(currentWeather: {
-  precipitation: number;
-  windSpeed: number;
-  temperature: number;
-  pressure: number;
-}, currentRiskScore: number): {
+export function generateHistoricalRecommendations(currentWeather: WeatherConditions, currentRiskScore: number): {
   historicalContext: string;
   recommendations: string[];
   confidence: number;
@@ -183,7 +193,7 @@ export function generateHistoricalRecommendations(currentWeather: {
 }
 
 // Simular llamada a Copernicus CDS API
-export async function fetchCopernicusData(date: string): Promise<any> {
+export async function fetchCopernicusData(date: string): Promise<CopernicusData | null> {
   console.log(`[Copernicus] Fetching ERA5 data for ${date} - Madrid area`);
   
   const event = historicalEvents.find(e => e.date === date);

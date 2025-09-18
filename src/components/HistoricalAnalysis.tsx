@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { History, TrendingUp, AlertCircle, CheckCircle, Clock, MapPin, Info } from 'lucide-react';
-import { generateHistoricalRecommendations, historicalEvents } from '@/lib/copernicusAPI';
+import { generateHistoricalRecommendations, historicalEvents, HistoricalEvent } from '@/lib/copernicusAPI';
 import { WeatherData } from '@/types';
 
 interface HistoricalAnalysisProps {
@@ -10,9 +10,16 @@ interface HistoricalAnalysisProps {
   currentRiskScore: number;
 }
 
+interface HistoricalRecommendations {
+  historicalContext: string;
+  recommendations: string[];
+  confidence: number;
+  warningLevel: 'info' | 'watch' | 'advisory' | 'warning';
+}
+
 export default function HistoricalAnalysis({ weatherData, currentRiskScore }: HistoricalAnalysisProps) {
-  const [analysis, setAnalysis] = useState<any>(null);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<HistoricalRecommendations | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<HistoricalEvent | null>(null);
 
   useEffect(() => {
     if (weatherData) {
