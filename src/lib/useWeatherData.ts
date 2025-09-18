@@ -11,6 +11,8 @@ export function useWeatherData() {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [dataSource, setDataSource] = useState<string>('');
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [originalWeatherData, setOriginalWeatherData] = useState<WeatherData | null>(null);
 
   const calculateRiskScore = (weather: WeatherData, platform: Platform): number => {
     let score = 0;
@@ -44,34 +46,57 @@ export function useWeatherData() {
     return Math.min(Math.round(score), 100);
   };
 
+  const updatePlatformScores = (weather: WeatherData) => {
+    const updatedPlatforms = initialPlatforms.map(platform => ({
+      ...platform,
+      riskScore: calculateRiskScore(weather, platform)
+    }));
+    setPlatforms(updatedPlatforms);
+  };
+
   const updateWeatherData = async () => {
+    if (isSimulating) return; // No actualizar durante simulación
+    
     setLoading(true);
     try {
       const newWeatherData = await fetchWeatherData();
       
       if (newWeatherData) {
         setWeatherData(newWeatherData);
-        
-        // Determinar fuente de datos basado en los logs de consola
-        if (newWeatherData.temperature > 0 && newWeatherData.humidity > 0) {
-          setDataSource('AEMET/NASA');
-        } else {
-          setDataSource('Fallback');
-        }
-        
-        // Actualizar scores de riesgo
-        const updatedPlatforms = initialPlatforms.map(platform => ({
-          ...platform,
-          riskScore: calculateRiskScore(newWeatherData, platform)
-        }));
-        
-        setPlatforms(updatedPlatforms);
+        setDataSource('APIs en vivo');
+        updatePlatformScores(newWeatherData);
         setLastUpdate(new Date());
+        
+        // Guardar datos originales para poder resetear
+        if (!originalWeatherData) {
+          setOriginalWeatherData(newWeatherData);
+        }
       }
     } catch (error) {
       console.error('Error updating weather data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const simulateWeather = (simulatedData: WeatherData) => {
+    setIsSimulating(true);
+    setWeatherData(simulatedData);
+    setDataSource('Simulación DANA');
+    updatePlatformScores(simulatedData);
+    setLastUpdate(new Date());
+  };
+
+  const resetSimulation = () => {
+    setIsSimulating(false);
+    if (originalWeatherData) {
+      setWeatherData(originalWeatherData);
+      setDataSource('APIs en vivo');
+      updatePlatformScores(originalWeatherData);
+      setLastUpdate(new Date());
+    } else {
+      // Si no hay datos originales, obtener nuevos
+      updateWeatherData();
     }
   };
 
@@ -87,6 +112,9 @@ export function useWeatherData() {
     loading,
     lastUpdate,
     dataSource,
-    refreshData: updateWeatherData
+    isSimulating,
+    refreshData: updateWeatherData,
+    simulateWeather,
+    resetSimulation
   };
 }
