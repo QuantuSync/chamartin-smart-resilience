@@ -138,7 +138,7 @@ async function fetchCopernicusHistoricalContext() {
   }
 }
 
-function fuseWeatherData(aemetData: any, nasaData: any, copernicusData: any) {
+function fuseWeatherData(aemetData: {status: string; [key: string]: any}, nasaData: {status: string; [key: string]: any}, copernicusData: {status: string; [key: string]: any}) {
   const fusedData = {
     timestamp: new Date().toISOString(),
     temperature: 0,

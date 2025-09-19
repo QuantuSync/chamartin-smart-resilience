@@ -18,11 +18,11 @@ interface Recommendation {
 export default function RecommendationsPanel({ weatherData, platforms }: RecommendationsPanelProps) {
   const generateRecommendations = (): Recommendation[] => {
     const recommendations: Recommendation[] = [];
-    const highRiskPlatforms = platforms.filter(p => p.riskScore >= 70);
     const mediumRiskPlatforms = platforms.filter(p => p.riskScore >= 50 && p.riskScore < 70);
 
     // CRÍTICAS: Solo para situaciones realmente peligrosas
     if (weatherData.precipitation > 10) {
+      const highRiskPlatforms = platforms.filter(p => p.riskScore >= 70);
       recommendations.push({
         type: 'critical',
         title: 'Lluvia Torrencial - Riesgo de Inundación',
@@ -34,6 +34,7 @@ export default function RecommendationsPanel({ weatherData, platforms }: Recomme
     }
 
     if (weatherData.windSpeed > 20) {
+      const highRiskPlatforms = platforms.filter(p => p.riskScore >= 70);
       recommendations.push({
         type: 'critical',
         title: 'Vientos Extremos - Peligro para Pasajeros',

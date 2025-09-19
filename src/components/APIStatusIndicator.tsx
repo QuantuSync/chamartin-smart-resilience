@@ -12,7 +12,7 @@ interface APIStatus {
 }
 
 interface APIStatusIndicatorProps {
-  weatherData: any;
+  weatherData: unknown;
   dataSource: string;
 }
 
@@ -49,7 +49,6 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
   ]);
 
   const [totalRequests, setTotalRequests] = useState(423);
-  const [uptime, setUptime] = useState(99.7);
 
   useEffect(() => {
     // Simular actualizaciones de estado basadas en la fuente de datos actual
@@ -156,7 +155,7 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-1">
               <Wifi className="w-4 h-4" />
-              <span>Uptime: {uptime}%</span>
+              <span>Uptime: 99.7%</span>
             </div>
             <div className="flex items-center gap-1">
               <Database className="w-4 h-4" />
