@@ -1,7 +1,5 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import { History, TrendingUp, AlertCircle, CheckCircle, Clock, MapPin, Info, Users, Shield, XCircle, Calendar, BarChart3, AlertTriangle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { generateHistoricalRecommendations, historicalEvents, HistoricalEvent } from '@/lib/copernicusAPI';
 import { WeatherData } from '@/types';
 
@@ -131,7 +129,6 @@ export default function HistoricalAnalysis({ weatherData, currentRiskScore }: Hi
   return (
     <div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Panel de Análisis Histórico */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <History className="w-5 h-5 text-blue-500" />
@@ -173,7 +170,6 @@ export default function HistoricalAnalysis({ weatherData, currentRiskScore }: Hi
           </div>
         </div>
 
-        {/* Panel de Eventos Históricos */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-purple-500" />
@@ -229,12 +225,11 @@ export default function HistoricalAnalysis({ weatherData, currentRiskScore }: Hi
         </div>
       </div>
 
-      {/* Sección de Análisis Comparativo */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-green-500" />
-            <h2 className="text-xl font-semibold text-gray-800">Análisis Comparativo: "Sin Sistema vs Con Sistema"</h2>
+            <h2 className="text-xl font-semibold text-gray-800">Análisis Comparativo: Sin Sistema vs Con Sistema</h2>
           </div>
           <button
             onClick={() => setShowComparison(!showComparison)}

@@ -14,7 +14,7 @@ export function useWeatherData() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [originalWeatherData, setOriginalWeatherData] = useState<WeatherData | null>(null);
 
-  const calculateRiskScore = (weather: WeatherData, platform: Platform): number => {
+  const calculateRiskScore = useCallback((weather: WeatherData, platform: Platform): number => {
     let score = 0;
     
     // Factor lluvia (30%)
@@ -44,18 +44,18 @@ export function useWeatherData() {
     score += pressureFactor * 0.10;
     
     return Math.min(Math.round(score), 100);
-  };
+  }, []);
 
-  const updatePlatformScores = (weather: WeatherData) => {
+  const updatePlatformScores = useCallback((weather: WeatherData) => {
     const updatedPlatforms = initialPlatforms.map(platform => ({
       ...platform,
       riskScore: calculateRiskScore(weather, platform)
     }));
     setPlatforms(updatedPlatforms);
-  };
+  }, [calculateRiskScore]);
 
   const updateWeatherData = useCallback(async () => {
-    if (isSimulating) return; // No actualizar durante simulación
+    if (isSimulating) return;
     
     setLoading(true);
     try {
@@ -67,7 +67,6 @@ export function useWeatherData() {
         updatePlatformScores(newWeatherData);
         setLastUpdate(new Date());
         
-        // Guardar datos originales para poder resetear
         if (!originalWeatherData) {
           setOriginalWeatherData(newWeatherData);
         }
@@ -77,7 +76,7 @@ export function useWeatherData() {
     } finally {
       setLoading(false);
     }
-  }, [isSimulating, originalWeatherData]);
+  }, [isSimulating, originalWeatherData, updatePlatformScores]);
 
   const simulateWeather = (simulatedData: WeatherData) => {
     setIsSimulating(true);
@@ -95,14 +94,13 @@ export function useWeatherData() {
       updatePlatformScores(originalWeatherData);
       setLastUpdate(new Date());
     } else {
-      // Si no hay datos originales, obtener nuevos
       updateWeatherData();
     }
   };
 
   useEffect(() => {
     updateWeatherData();
-    const interval = setInterval(updateWeatherData, 900000); // 15 minutos
+    const interval = setInterval(updateWeatherData, 900000);
     return () => clearInterval(interval);
   }, [updateWeatherData]);
 

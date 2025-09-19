@@ -28,8 +28,8 @@ export default function RecommendationsPanel({ weatherData, platforms }: Recomme
         title: 'Lluvia Torrencial - Riesgo de Inundación',
         description: `Precipitación extrema de ${weatherData.precipitation.toFixed(1)} mm/h`,
         action: 'Suspender servicios en andenes descubiertos y evacuar si es necesario',
-        platforms: platforms.filter(p => !p.isRoofed && p.riskScore >= 70).map(p => p.name),
-        passengerImpact: platforms.filter(p => !p.isRoofed && p.riskScore >= 70).length * 150
+        platforms: highRiskPlatforms.filter(p => !p.isRoofed).map(p => p.name),
+        passengerImpact: highRiskPlatforms.filter(p => !p.isRoofed).length * 150
       });
     }
 
@@ -40,8 +40,8 @@ export default function RecommendationsPanel({ weatherData, platforms }: Recomme
         title: 'Vientos Extremos - Peligro para Pasajeros',
         description: `Viento de ${weatherData.windSpeed.toFixed(1)} m/s supera límites de seguridad`,
         action: 'Suspender operaciones en andenes expuestos inmediatamente',
-        platforms: platforms.filter(p => !p.isRoofed).map(p => p.name),
-        passengerImpact: platforms.filter(p => !p.isRoofed).length * 150
+        platforms: highRiskPlatforms.filter(p => !p.isRoofed).map(p => p.name),
+        passengerImpact: highRiskPlatforms.filter(p => !p.isRoofed).length * 150
       });
     }
 
@@ -208,7 +208,6 @@ export default function RecommendationsPanel({ weatherData, platforms }: Recomme
         ))}
       </div>
 
-      {/* Resumen de acciones por tipo */}
       <div className="mt-6 pt-4 border-t border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
           <div className="bg-red-50 rounded-lg p-3">

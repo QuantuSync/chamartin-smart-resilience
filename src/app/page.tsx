@@ -37,8 +37,7 @@ export default function Home() {
   };
 
   const getTotalPassengersAtRisk = () => {
-    // Estimación basada en ocupación promedio por andén
-    const highRiskPassengers = getHighRiskPlatforms() * 150; // 150 pasajeros promedio por andén de alto riesgo
+    const highRiskPassengers = getHighRiskPlatforms() * 150;
     const mediumRiskPassengers = getMediumRiskPlatforms() * 100;
     return highRiskPassengers + mediumRiskPassengers;
   };
@@ -125,13 +124,10 @@ export default function Home() {
             </div>
           )}
 
-          {/* Monitor de APIs */}
           <APIStatusIndicator 
-            weatherData={weatherData}
             dataSource={dataSource}
           />
 
-          {/* Resumen de riesgos */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h3 className="text-red-800 font-semibold">Riesgo Crítico</h3>
@@ -158,7 +154,6 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Panel de Recomendaciones Automáticas */}
         {weatherData && (
           <RecommendationsPanel 
             weatherData={weatherData} 
@@ -166,13 +161,11 @@ export default function Home() {
           />
         )}
 
-        {/* Simulador DANA */}
         <DANASimulator 
           onSimulate={simulateWeather}
           onReset={resetSimulation}
         />
 
-        {/* Grid de Andenes */}
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">Estado de Andenes en Tiempo Real</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -182,13 +175,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Análisis Histórico con Copernicus - Movido al final */}
         <HistoricalAnalysis 
           weatherData={weatherData} 
           currentRiskScore={Math.max(...platforms.map(p => p.riskScore))} 
         />
 
-        {/* Footer con información del sistema */}
         <footer className="bg-white rounded-lg shadow-md p-6 mt-8">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">

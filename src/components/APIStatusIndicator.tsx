@@ -12,11 +12,10 @@ interface APIStatus {
 }
 
 interface APIStatusIndicatorProps {
-  weatherData: unknown;
   dataSource: string;
 }
 
-export default function APIStatusIndicator({ weatherData, dataSource }: APIStatusIndicatorProps) {
+export default function APIStatusIndicator({ dataSource }: APIStatusIndicatorProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [apiStatuses, setApiStatuses] = useState<APIStatus[]>([
     {
@@ -41,7 +40,7 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
       name: 'Copernicus ERA5',
       status: 'active',
       responseTime: 850,
-      lastCall: new Date(Date.now() - 300000), // 5 min ago
+      lastCall: new Date(Date.now() - 300000),
       callsToday: 47,
       endpoint: 'climate.copernicus.eu',
       icon: <Database className="w-4 h-4" />
@@ -51,14 +50,12 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
   const [totalRequests, setTotalRequests] = useState(423);
 
   useEffect(() => {
-    // Simular actualizaciones de estado basadas en la fuente de datos actual
     const interval = setInterval(() => {
       setApiStatuses(prevStatuses => 
         prevStatuses.map(api => {
           let newStatus = api;
           
           if (dataSource === 'APIs en vivo') {
-            // Con fusión de datos, todas las APIs están activas simultáneamente
             if (api.name === 'AEMET OpenData') {
               newStatus = {
                 ...api,
@@ -77,7 +74,6 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
               };
             }
           } else if (dataSource === 'Simulación DANA') {
-            // Durante simulación, mostrar que las APIs están monitoreando
             newStatus = {
               ...api,
               status: api.name === 'Copernicus ERA5' ? 'active' : 'standby',
@@ -134,7 +130,6 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
 
   return (
     <div className="bg-white rounded-lg shadow-md mb-6">
-      {/* Header colapsable */}
       <div 
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -170,7 +165,6 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
         </div>
       </div>
 
-      {/* Contenido expandible */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-gray-100">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -208,7 +202,6 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
                   </div>
                 </div>
 
-                {/* Indicador de actividad */}
                 <div className="mt-2 pt-2 border-t border-gray-100">
                   <div className="flex items-center gap-1 text-xs">
                     <div className={`w-2 h-2 rounded-full ${
@@ -225,7 +218,6 @@ export default function APIStatusIndicator({ weatherData, dataSource }: APIStatu
             ))}
           </div>
 
-          {/* Resumen del tráfico */}
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>🚦 Tráfico de red en tiempo real - Sistema de monitorización activo</span>
