@@ -34,18 +34,22 @@ async function fetchNASAData() {
     }
     
     return {
-      timestamp: new Date().toISOString(),
       temperature: temp,
       humidity: humidity,
       precipitation: Math.max(0, properties.PRECTOTCORR[latestDate] || 0),
       windSpeed: properties.WS2M[latestDate] || 5,
       windDirection: 180,
       pressure: properties.PS[latestDate] || 1013,
-      source: 'NASA'
+      source: 'NASA',
+      status: 'success'
     };
   } catch (error) {
     console.error('NASA API failed:', error);
-    return null;
+    return {
+      source: 'NASA',
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown NASA API error'
+    };
   }
 }
 
@@ -79,14 +83,14 @@ async function fetchAEMETData() {
         const latest = weatherArray[weatherArray.length - 1];
         
         return {
-          timestamp: new Date().toISOString(),
-          temperature: parseFloat(latest.ta) || 20,
-          humidity: parseFloat(latest.hr) || 60,
+          temperature: parseFloat(latest.ta) || null,
+          humidity: parseFloat(latest.hr) || null,
           precipitation: parseFloat(latest.prec) || 0,
-          windSpeed: parseFloat(latest.vv) || 5,
-          windDirection: parseFloat(latest.dv) || 180,
-          pressure: parseFloat(latest.pres) || 1013,
-          source: 'AEMET'
+          windSpeed: parseFloat(latest.vv) || null,
+          windDirection: parseFloat(latest.dv) || null,
+          pressure: parseFloat(latest.pres) || null,
+          source: 'AEMET',
+          status: 'success'
         };
       }
     }
@@ -94,25 +98,180 @@ async function fetchAEMETData() {
     throw new Error('No AEMET data available');
   } catch (error) {
     console.error('AEMET API failed:', error);
-    return null;
+    return {
+      source: 'AEMET',
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown AEMET API error'
+    };
   }
+}
+
+async function fetchCopernicusHistoricalContext() {
+  try {
+    // Simulación de llamada a Copernicus para contexto histórico
+    // En implementación real conectarías con CDS API
+    await new Promise(resolve => setTimeout(resolve, 200)); // Simular latencia
+    
+    return {
+      historicalAvg: {
+        temperature: 18.2,
+        humidity: 65,
+        precipitation: 1.8,
+        windSpeed: 8.5
+      },
+      anomaly: {
+        temperature: 0,  // Se calculará después
+        humidity: 0,     // Se calculará después
+        precipitation: 0, // Se calculará después
+        windSpeed: 0     // Se calculará después
+      },
+      source: 'Copernicus',
+      status: 'success'
+    };
+  } catch (error) {
+    console.error('Copernicus context failed:', error);
+    return {
+      source: 'Copernicus',
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown Copernicus API error'
+    };
+  }
+}
+
+function fuseWeatherData(aemetData: any, nasaData: any, copernicusData: any) {
+  const fusedData = {
+    timestamp: new Date().toISOString(),
+    temperature: 0,
+    humidity: 0,
+    precipitation: 0,
+    windSpeed: 0,
+    windDirection: 0,
+    pressure: 0,
+    sources: [] as string[],
+    confidence: 0,
+    dataQuality: 'high'
+  };
+
+  let tempSum = 0, tempCount = 0;
+  let humSum = 0, humCount = 0;
+  let precipSum = 0, precipCount = 0;
+  let windSum = 0, windCount = 0;
+  let pressSum = 0, pressCount = 0;
+  let directionSum = 0, directionCount = 0;
+
+  // AEMET (peso 60% - más preciso localmente)
+  if (aemetData.status === 'success') {
+    fusedData.sources.push('AEMET');
+    const weight = 0.6;
+    
+    if (aemetData.temperature !== null) {
+      tempSum += aemetData.temperature * weight;
+      tempCount += weight;
+    }
+    if (aemetData.humidity !== null) {
+      humSum += aemetData.humidity * weight;
+      humCount += weight;
+    }
+    if (aemetData.precipitation !== null) {
+      precipSum += aemetData.precipitation * weight;
+      precipCount += weight;
+    }
+    if (aemetData.windSpeed !== null) {
+      windSum += aemetData.windSpeed * weight;
+      windCount += weight;
+    }
+    if (aemetData.pressure !== null) {
+      pressSum += aemetData.pressure * weight;
+      pressCount += weight;
+    }
+    if (aemetData.windDirection !== null) {
+      directionSum += aemetData.windDirection * weight;
+      directionCount += weight;
+    }
+  }
+
+  // NASA (peso 40% - cobertura satelital)
+  if (nasaData.status === 'success') {
+    fusedData.sources.push('NASA');
+    const weight = 0.4;
+    
+    tempSum += nasaData.temperature * weight;
+    tempCount += weight;
+    humSum += nasaData.humidity * weight;
+    humCount += weight;
+    precipSum += nasaData.precipitation * weight;
+    precipCount += weight;
+    windSum += nasaData.windSpeed * weight;
+    windCount += weight;
+    pressSum += nasaData.pressure * weight;
+    pressCount += weight;
+    directionSum += nasaData.windDirection * weight;
+    directionCount += weight;
+  }
+
+  // Calcular promedios ponderados
+  fusedData.temperature = tempCount > 0 ? tempSum / tempCount : 18;
+  fusedData.humidity = humCount > 0 ? humSum / humCount : 60;
+  fusedData.precipitation = precipCount > 0 ? precipSum / precipCount : 0;
+  fusedData.windSpeed = windCount > 0 ? windSum / windCount : 5;
+  fusedData.pressure = pressCount > 0 ? pressSum / pressCount : 1013;
+  fusedData.windDirection = directionCount > 0 ? directionSum / directionCount : 180;
+
+  // Calcular confianza basada en fuentes disponibles
+  fusedData.confidence = fusedData.sources.length >= 2 ? 95 : 
+                        fusedData.sources.length === 1 ? 75 : 50;
+
+  // Añadir contexto histórico si está disponible
+  if (copernicusData.status === 'success') {
+    fusedData.sources.push('Copernicus');
+    // Calcular anomalías respecto al promedio histórico
+    copernicusData.anomaly = {
+      temperature: fusedData.temperature - copernicusData.historicalAvg.temperature,
+      humidity: fusedData.humidity - copernicusData.historicalAvg.humidity,
+      precipitation: fusedData.precipitation - copernicusData.historicalAvg.precipitation,
+      windSpeed: fusedData.windSpeed - copernicusData.historicalAvg.windSpeed
+    };
+  }
+
+  return {
+    fusedData,
+    rawSources: {
+      aemet: aemetData,
+      nasa: nasaData,
+      copernicus: copernicusData
+    }
+  };
 }
 
 export async function GET() {
   try {
-    // Intentar AEMET primero
-    let weatherData = await fetchAEMETData();
-    if (weatherData) {
-      return NextResponse.json(weatherData);
-    }
+    // Llamadas paralelas a todas las APIs
+    const [aemetData, nasaData, copernicusData] = await Promise.all([
+      fetchAEMETData(),
+      fetchNASAData(),
+      fetchCopernicusHistoricalContext()
+    ]);
+
+    // Fusionar los datos de múltiples fuentes
+    const { fusedData, rawSources } = fuseWeatherData(aemetData, nasaData, copernicusData);
+
+    // Respuesta con datos fusionados y metadatos de las fuentes
+    const response = {
+      ...fusedData,
+      metadata: {
+        fusionStrategy: 'weighted_average',
+        sourcesUsed: fusedData.sources,
+        confidence: fusedData.confidence,
+        rawSources: rawSources,
+        processingTime: new Date().toISOString()
+      }
+    };
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error('Weather fusion API error:', error);
     
-    // Si AEMET falla, intentar NASA
-    weatherData = await fetchNASAData();
-    if (weatherData) {
-      return NextResponse.json(weatherData);
-    }
-    
-    // Fallback con datos realistas
+    // Fallback con datos realistas si todas las APIs fallan
     const fallbackData = {
       timestamp: new Date().toISOString(),
       temperature: 18 + Math.random() * 8,
@@ -121,15 +280,18 @@ export async function GET() {
       windSpeed: 3 + Math.random() * 12,
       windDirection: Math.random() * 360,
       pressure: 1010 + Math.random() * 10,
-      source: 'Fallback'
+      sources: ['Fallback'],
+      confidence: 30,
+      dataQuality: 'estimated',
+      metadata: {
+        fusionStrategy: 'fallback',
+        sourcesUsed: ['Fallback'],
+        confidence: 30,
+        error: 'All APIs failed',
+        processingTime: new Date().toISOString()
+      }
     };
     
     return NextResponse.json(fallbackData);
-  } catch (error) {
-    console.error('Weather API route error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch weather data' },
-      { status: 500 }
-    );
   }
 }

@@ -3,6 +3,8 @@
 import PlatformCard from '@/components/PlatformCard';
 import DANASimulator from '@/components/DANASimulator';
 import HistoricalAnalysis from '@/components/HistoricalAnalysis';
+import RecommendationsPanel from '@/components/RecommendationsPanel';
+import APIStatusIndicator from '@/components/APIStatusIndicator';
 import { useWeatherData } from '@/lib/useWeatherData';
 import { RefreshCw, Cloud, Thermometer, Droplets, Activity, Database } from 'lucide-react';
 
@@ -45,26 +47,28 @@ export default function Home() {
     <main className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Chamartín Smart Resilience
-              </h1>
-              <p className="text-xl text-gray-600">
-                Sistema de monitorización y predicción climática con IA
-              </p>
-              <div className="flex items-center gap-4 mt-2">
-                <div className="flex items-center gap-1 text-sm text-gray-500">
-                  <Database className="w-4 h-4" />
-                  <span>NASA POWER • AEMET • Copernicus ERA5</span>
-                </div>
-                {getTotalPassengersAtRisk() > 0 && (
-                  <div className="text-sm text-orange-600 font-medium">
-                    ~{getTotalPassengersAtRisk().toLocaleString()} pasajeros en riesgo
-                  </div>
-                )}
+          <div className="text-center mb-6">
+            <h1 className="text-5xl lg:text-6xl font-black text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text mb-4 tracking-tight">
+              Chamartín Smart Resilience
+            </h1>
+            <p className="text-xl lg:text-2xl text-gray-600 font-light max-w-3xl mx-auto leading-relaxed">
+              Sistema inteligente de monitorización y predicción climática
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-6 mt-4">
+              <div className="flex items-center gap-2 text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+                <Database className="w-4 h-4" />
+                <span className="font-medium">NASA POWER • AEMET • Copernicus ERA5</span>
               </div>
+              {getTotalPassengersAtRisk() > 0 && (
+                <div className="text-sm text-orange-600 font-medium bg-orange-50 px-3 py-1 rounded-full">
+                  ~{getTotalPassengersAtRisk().toLocaleString()} pasajeros en riesgo
+                </div>
+              )}
             </div>
+          </div>
+
+          <div className="flex flex-col lg:flex-row items-center justify-between mb-6">
+            <div className="mb-4 lg:mb-0"></div>
             <div className="flex items-center gap-4">
               {isSimulating && (
                 <div className="flex items-center gap-2 bg-orange-100 text-orange-800 px-4 py-2 rounded-lg">
@@ -121,6 +125,12 @@ export default function Home() {
             </div>
           )}
 
+          {/* Monitor de APIs */}
+          <APIStatusIndicator 
+            weatherData={weatherData}
+            dataSource={dataSource}
+          />
+
           {/* Resumen de riesgos */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -148,11 +158,13 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Análisis Histórico con Copernicus */}
-        <HistoricalAnalysis 
-          weatherData={weatherData} 
-          currentRiskScore={Math.max(...platforms.map(p => p.riskScore))} 
-        />
+        {/* Panel de Recomendaciones Automáticas */}
+        {weatherData && (
+          <RecommendationsPanel 
+            weatherData={weatherData} 
+            platforms={platforms} 
+          />
+        )}
 
         {/* Simulador DANA */}
         <DANASimulator 
@@ -170,6 +182,12 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Análisis Histórico con Copernicus - Movido al final */}
+        <HistoricalAnalysis 
+          weatherData={weatherData} 
+          currentRiskScore={Math.max(...platforms.map(p => p.riskScore))} 
+        />
+
         {/* Footer con información del sistema */}
         <footer className="bg-white rounded-lg shadow-md p-6 mt-8">
           <div className="text-center">
@@ -177,13 +195,13 @@ export default function Home() {
               Sistema de Resiliencia Climática Inteligente
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Integrando datos satelitales, observaciones terrestres y análisis histórico para decisiones preventivas
+              Algoritmos avanzados para fusión de datos y toma de decisiones automatizada
             </p>
             <div className="flex justify-center items-center gap-6 text-xs text-gray-500">
               <div>🛰️ NASA POWER API</div>
               <div>🌡️ AEMET OpenData</div>
               <div>📊 Copernicus ERA5</div>
-              <div>🤖 IA Predictiva</div>
+              <div>🧠 Algoritmos Inteligentes</div>
             </div>
           </div>
         </footer>
